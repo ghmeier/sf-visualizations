@@ -1,0 +1,4 @@
+{
+  "extends": ["mixmax/browser", "mixmax/prettier"],
+  "root": true
+}
