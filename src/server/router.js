@@ -16,8 +16,4 @@ router.use((req, res, next) => {
 
 router.use('/api', asyncMiddleware(require('./api')));
 
-router.get('*', (req, res) => {
-  res.redirect('/');
-});
-
 module.exports = router;
