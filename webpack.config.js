@@ -1,3 +1,6 @@
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+
 module.exports = {
   mode: 'development',
   target: 'web',
@@ -5,13 +8,39 @@ module.exports = {
   entry: {
     main: './src/client/main.jsx',
   },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      // Required
+      inject: false,
+      template: require('html-webpack-template'),
+
+      scripts: [
+        'https://unpkg.com/react@16/umd/react.development.js',
+        'https://unpkg.com/react-dom@16/umd/react-dom.development.js',
+        'https://unpkg.com/prop-types/prop-types.min.js',
+        'https://unpkg.com/recharts/umd/Recharts.min.js',
+        'build-main.js',
+      ],
+      links: [
+        { rel: 'stylesheet', href: 'https://unpkg.com/tachyons@4.8.1/css/tachyons.min.css' },
+        {
+          rel: 'stylesheet',
+          type: 'text/css',
+          href: 'https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700italic,700',
+        },
+      ],
+      headHtmlSnippet: "<style type=\"text/css\">body { font-family: 'Roboto' }</style>",
+      appMountId: 'root',
+      title: 'SF COVID Visalizations',
+    }),
+  ],
   output: {
     path: `${__dirname}/dist`,
     filename: 'build-[name].js',
   },
   module: {
     rules: [
-      // Configuration for .jsx files (i.e. React code).
       {
         test: /\.jsx$/,
         exclude: /node_modules/,
@@ -23,25 +52,18 @@ module.exports = {
               '@babel/plugin-proposal-function-bind',
               '@babel/plugin-transform-runtime',
               '@babel/plugin-proposal-export-default-from',
-              // Allows parsing JSX at all.
               '@babel/plugin-syntax-jsx',
-
-              // Transforms JSX into React function calls.
-              // https://babeljs.io/docs/en/next/babel-plugin-transform-react-jsx.html
               '@babel/plugin-transform-react-jsx',
             ],
-            // Optimization: In production, strip superfluous whitespace and line terminators.
             compact: false,
           },
         },
       },
+      {}
     ],
   },
   resolve: {
-    // Allows us to import files without specifying an extension. .js takes precedence over .jsx.
     extensions: ['.js', '.jsx'],
-
-    // Explicitly alias certain import paths to specific locations.
     alias: {
       '~': `${__dirname}/src/client`,
     },
