@@ -16,8 +16,10 @@ function resourceUrl(resource) {
 }
 
 function percentChange(previous, current) {
-  return previous === 0 ? 0 : ((current / previous) * 100 - 100).toFixed(2);
+  return previous === 0 ? 0 : Math.floor((current / previous) * 1000) / 10 - 100;
 }
+
+const ROLLING_WINDOW = 3;
 
 router.get('/hospitalizations', async (req, res) => {
   const allHospitalizations = await got(resourceUrl('hospitalizations')).json();
@@ -58,7 +60,7 @@ router.get('/cases', async (req, res) => {
     if (!byDate[date]) {
       byDate[date] = {};
       caseCategories.forEach((category) => {
-        byDate[date][category] = { increase: 0, cumulative: 0, percentChange: 0 };
+        byDate[date][category] = { increase: 0, cumulative: 0 };
       });
     }
     byDate[date][key].increase += parseInt(case_count, 10);
@@ -66,20 +68,30 @@ router.get('/cases', async (req, res) => {
   });
 
   const results = _.sortBy(Object.values(byDate), ({ reported }) => new Date(reported));
+  let rollingSum = 0;
+  results.map((value, ix) => {
+    const previous = ix > 0 && results[ix - 1];
 
-  const previous = { Community: 0, 'From Contact': 0, Unknown: 0, Deaths: 0, total: 0 };
-  results.forEach((value) => {
     caseCategories.map((key) => {
       const { increase } = value[key];
-      value[key].cumulative = previous[key] + increase;
-      value[key].percentChange = percentChange(previous[key], value[key].cumulative);
+      if (!previous) {
+        value[key].cumulative = increase;
+        value[key].percentChange = 0;
+        return;
+      }
 
-      previous[key] = value[key].cumulative;
+      value[key].cumulative = previous[key].cumulative + increase;
+      value[key].percentChange = percentChange(previous[key].cumulative, value[key].cumulative);
     });
 
     value.total = _.sumBy(transmissionCategories, (category) => value[category].cumulative);
-    if (previous.total !== 0) value.percentChange = percentChange(previous.total, value.total);
-    previous.total = value.total;
+    if (previous) value.percentChange = percentChange(previous.total, value.total);
+
+    rollingSum += _.sumBy(transmissionCategories, (category) => value[category].increase);
+    if (ix >= ROLLING_WINDOW) {
+      rollingSum -= _.sumBy(transmissionCategories, (category) => results[ix - ROLLING_WINDOW][category].increase);
+    }
+    value.rollingAverage = Math.floor((rollingSum / ROLLING_WINDOW) * 100) / 100;
   });
 
   res.json(results);
