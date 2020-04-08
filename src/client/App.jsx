@@ -4,6 +4,7 @@ import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, Text } f
 
 const icuColor = '#0000cc';
 const acuteColor = '#00cc66';
+const defaultColor = '#003366';
 
 function toHospitaleData(list) {
   return list.map((item) => ({
@@ -19,28 +20,39 @@ function toHospitaleData(list) {
 function toCaseData(list) {
   return list.map((item) => ({
     name: new Date(item.reported).toLocaleDateString(),
-    communityChange: item.Community.percentChange,
-    deathsChange: item.Deaths.percentChange,
-    unknownChange: item.Unknown.percentChange,
-    fromContactChange: item['From Contact'].percentChange,
-    communityIncrease: item.Community.increase,
-    deathsIncrease: item.Deaths.increase,
-    unknownIncrease: item.Unknown.increase,
-    fromContactIncrease: item['From Contact'].increase,
-    communityCumulative: item.Community.cumulative,
-    deathsCumulative: item.Deaths.cumulative,
-    unknownCumulative: item.Unknown.cumulative,
-    fromContactCumulative: item['From Contact'].cumulative,
+    deathsPercentChange: item.Deaths.percentChange,
+    deaths: item.Deaths.cumulative,
     total: item.total,
-    change: item.change,
+    percentChange: item.percentChange,
+    rollingAverage: item.rollingAverage,
   }));
 }
 
 function VerticalLabel({ text }) {
   return (
-    <Text x={-10} y={0} dx={50} dy={150} offset={0} angle={-90}>
+    <Text x={-10} y={0} dx={50} dy={150} offset={0} angle={-90} className='f6 f5-ns fw4 black-70'>
       {text}
     </Text>
+  );
+}
+
+function Chart({ title, data, yAxisLabel, children }) {
+  return (
+    <div className='mw5 mw7-ns center pa2'>
+      <h2 className='f5 f4-ns fw6 black-70'>{title}</h2>
+      <LineChart
+        width={730}
+        height={300}
+        data={data}
+        margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
+        <CartesianGrid strokeDasharray='3 3' />
+        <XAxis dataKey='name' />
+        <YAxis label={<VerticalLabel text={yAxisLabel} />} />
+        <Tooltip />
+        <Legend />
+        {children}
+      </LineChart>
+    </div>
   );
 }
 
@@ -64,99 +76,61 @@ export default class App extends React.Component {
 
   render() {
     return (
-      <div className='flexbox'>
-        <h2 className='pl5-l'>Total San Francisco Hospital bed use over time</h2>
-        <LineChart
-          width={730}
-          height={300}
-          data={this.state.hospitalizations}
-          margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='name' />
-          <YAxis label={<VerticalLabel text='Beds in Use' />} />
-          <Tooltip />
-          <Legend />
+      <div className='pa4 bg-light-gray'>
+        <div className='center'>
+          <h1 className='f3 f2-m f1-l'>Visualizing SF COVID-19 Cases</h1>
+        </div>
+        <Chart
+          yAxisLabel='Beds in Use'
+          title='Total San Francisco Hospital bed use over time'
+          data={this.state.hospitalizations}>
           <Line type='monotone' name='ICU' dataKey='icuTotal' stroke={icuColor} />
           <Line type='monotone' name='Acute Care' dataKey='acuteTotal' stroke={acuteColor} />
-          <Line type='monotone' name='Total' dataKey='total' stroke='#003366' />
-        </LineChart>
+          <Line type='monotone' name='Total' dataKey='total' stroke={defaultColor} />
+        </Chart>
 
-        <h2 className='pl5-l'>% Change in San Francisco Hospital bed use over time</h2>
-        <LineChart
-          width={730}
-          height={300}
-          data={this.state.hospitalizations}
-          margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='name' />
-          <YAxis domain={[-30, 100]} label={<VerticalLabel text='% Change in Beds' />} />
-          <Tooltip />
-          <Legend />
+        <Chart
+          yAxisLabel='% Change in Beds'
+          title='Change in San Francisco Hospital bed use over time'
+          data={this.state.hospitalizations}>
           <Line type='monotone' name='ICU' dataKey='icuChange' stroke={icuColor} />
           <Line type='monotone' name='Acute Care' dataKey='acuteChange' stroke={acuteColor} />
-        </LineChart>
+        </Chart>
 
-        <h2 className='pl5-l'>Total San Francisco Cases over time by Transmission Type</h2>
-        <LineChart
-          width={730}
-          height={300}
-          data={this.state.cases}
-          margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='name' />
-          <YAxis label={<VerticalLabel text='Number of Cases' />} />
-          <Tooltip />
-          <Legend />
-          <Line type='monotone' name='Total' dataKey='total' stroke='#003366' />
-          <Line type='monotone' name='Community' dataKey='communityCumulative' stroke={icuColor} />
-          <Line type='monotone' name='Unknown' dataKey='unknownCumulative' stroke={acuteColor} />
-          <Line type='monotone' name='Direct Contact' dataKey='fromContactCumulative' stroke='#003366' />
-        </LineChart>
+        <Chart
+          yAxisLabel='Number of Cases'
+          title='Total Cases in San Francisco Over Time'
+          data={this.state.cases}>
+          <Line type='monotone' name='Total' dataKey='total' stroke={defaultColor} />
+        </Chart>
 
-        <h2 className='pl5-l'>Change in San Francisco Cases Over Time</h2>
-        <LineChart
-          width={730}
-          height={300}
-          data={this.state.cases}
-          margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='name' />
-          <YAxis domain={[0, 200]} label={<VerticalLabel text='% Change in Cases' />} />
-          <Tooltip />
-          <Legend />
-          <Line type='monotone' name='Total' dataKey='change' stroke='#003366' />
-          <Line type='monotone' name='Community' dataKey='communityChange' stroke={icuColor} />
-          <Line type='monotone' name='Unknown' dataKey='unknownChange' stroke={acuteColor} />
-          <Line type='monotone' name='Direct Contact' dataKey='fromContactChange' stroke='#003366' />
-        </LineChart>
+        <Chart
+          yAxisLabel='New Cases'
+          title='3-day rolling average number of new cases'
+          data={this.state.cases}>
+          <Line type='monotone' name='Total' dataKey='rollingAverage' stroke={defaultColor} />
+        </Chart>
 
-        <h2 className='pl5-l'>Total San Francisco Deaths Over Time</h2>
-        <LineChart
-          width={730}
-          height={300}
-          data={this.state.cases}
-          margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='name' />
-          <YAxis label={<VerticalLabel text='Number of Deaths' />} />
-          <Tooltip />
-          <Legend />
-          <Line type='monotone' name='Total' dataKey='deathsCumulative' stroke='#003366' />
-        </LineChart>
+        <Chart
+          yAxisLabel='% change'
+          title='Change in San Francisco Cases Over Time'
+          data={this.state.cases}>
+          <Line type='monotone' name='Total' dataKey='percentChange' stroke={defaultColor} />
+        </Chart>
 
-        <h2 className='pl5-l'>Change in San Francisco Deaths Over Time</h2>
-        <LineChart
-          width={730}
-          height={300}
-          data={this.state.cases}
-          margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='name' />
-          <YAxis domain={[0, 200]} label={<VerticalLabel text='% Change in Deaths' />} />
-          <Tooltip />
-          <Legend />
-          <Line type='monotone' name='Total' dataKey='deathsChange' stroke='#003366' />
-        </LineChart>
+        <Chart
+          yAxisLabel='Number of Deaths'
+          title='Total San Francisco Deaths Over Time'
+          data={this.state.cases}>
+          <Line type='monotone' name='Total' dataKey='deaths' stroke={defaultColor} />
+        </Chart>
+
+        <Chart
+          yAxisLabel='% change'
+          title='Change in San Francisco Deaths Over Time'
+          data={this.state.cases}>
+          <Line type='monotone' name='Total' dataKey='deathsPercentChange' stroke={defaultColor} />
+        </Chart>
       </div>
     );
   }
