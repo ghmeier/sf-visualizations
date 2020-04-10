@@ -36,6 +36,8 @@ function VerticalLabel({ text }) {
   );
 }
 
+VerticalLabel.propTypes = { text: PropTypes.string.isRequired };
+
 function Chart({ title, data, yAxisLabel, children }) {
   return (
     <div className='mw5 mw7-ns center pa2'>
@@ -56,7 +58,12 @@ function Chart({ title, data, yAxisLabel, children }) {
   );
 }
 
-VerticalLabel.propTypes = { text: PropTypes.string.isRequired };
+Chart.propTypes = {
+  title: PropTypes.string.isRequired,
+  data: PropTypes.object.isRequired,
+  yAxisLabel: PropTypes.string.isRequired,
+  children: PropTypes.node.isRequired,
+};
 
 export default class App extends React.Component {
   constructor(props) {

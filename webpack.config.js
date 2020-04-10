@@ -27,10 +27,11 @@ module.exports = {
         {
           rel: 'stylesheet',
           type: 'text/css',
-          href: 'https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700italic,700',
+          href:
+            'https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700italic,700',
         },
       ],
-      headHtmlSnippet: "<style type=\"text/css\">body { font-family: 'Roboto' }</style>",
+      headHtmlSnippet: '<style type="text/css">body { font-family: \'Roboto\' }</style>',
       appMountId: 'root',
       title: 'SF COVID Visalizations',
     }),
@@ -59,7 +60,7 @@ module.exports = {
           },
         },
       },
-      {}
+      {},
     ],
   },
   resolve: {
