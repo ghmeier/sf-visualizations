@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, Text } from 'recharts';
+import { ReferenceLine, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, Text } from 'recharts';
 
 const icuColor = '#0000cc';
 const acuteColor = '#00cc66';
@@ -20,8 +20,8 @@ function toHospitaleData(list) {
 function toCaseData(list) {
   return list.map((item) => ({
     name: new Date(item.reported).toLocaleDateString(),
-    deathsPercentChange: item.Deaths.percentChange,
-    deaths: item.Deaths.cumulative,
+    deathsPercentChange: item.Death.percentChange,
+    deaths: item.Death.cumulative,
     total: item.total,
     percentChange: item.percentChange,
     rollingAverage: item.rollingAverage,
@@ -82,6 +82,8 @@ export default class App extends React.Component {
   }
 
   render() {
+    const date = new Date();
+    date.setDate(date.getDate() - 3);
     return (
       <div className='pa4 bg-light-gray'>
         <div className='center'>
@@ -115,6 +117,11 @@ export default class App extends React.Component {
           yAxisLabel='New Cases'
           title='3-day rolling average number of new cases'
           data={this.state.cases}>
+          <ReferenceLine
+            x={date.toLocaleDateString()}
+            stroke='red'
+            strokeDasharray='3 3'
+            label='Partial Data' />
           <Line type='monotone' name='Total' dataKey='rollingAverage' stroke={defaultColor} />
         </Chart>
 
