@@ -1,0 +1,8 @@
+*
+!/app.js
+!/dist
+!/package-lock.json
+!/package.json
+!/src
+.eslintrc*
+npm-debug.log*

@@ -89,7 +89,10 @@ router.get('/cases', async (req, res) => {
 
     rollingSum += _.sumBy(transmissionCategories, (category) => value[category].increase);
     if (ix >= ROLLING_WINDOW) {
-      rollingSum -= _.sumBy(transmissionCategories, (category) => results[ix - ROLLING_WINDOW][category].increase);
+      rollingSum -= _.sumBy(
+        transmissionCategories,
+        (category) => results[ix - ROLLING_WINDOW][category].increase
+      );
     }
     value.rollingAverage = Math.floor((rollingSum / ROLLING_WINDOW) * 100) / 100;
   });
