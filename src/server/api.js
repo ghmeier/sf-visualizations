@@ -49,14 +49,14 @@ router.get('/hospitalizations', async (req, res) => {
 });
 
 const transmissionCategories = ['Community', 'From Contact', 'Unknown'];
-const caseCategories = [...transmissionCategories, 'Deaths'];
+const caseCategories = [...transmissionCategories, 'Death'];
 
 router.get('/cases', async (req, res) => {
   const allCases = await got(resourceUrl('cases')).json();
   const byDate = {};
   allCases.forEach(({ date, case_count, transmission_category, case_disposition }) => {
     date = new Date(date).toLocaleDateString();
-    const key = case_disposition === 'Deaths' ? case_disposition : transmission_category;
+    const key = case_disposition === 'Death' ? case_disposition : transmission_category;
     if (!byDate[date]) {
       byDate[date] = {};
       caseCategories.forEach((category) => {
