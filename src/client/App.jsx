@@ -1,6 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ReferenceLine, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line, Text } from 'recharts';
+import {
+  ReferenceLine,
+  LineChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  Line,
+  Text,
+} from 'recharts';
 
 const icuColor = '#0000cc';
 const acuteColor = '#00cc66';
@@ -81,9 +91,17 @@ export default class App extends React.Component {
       .then((data) => this.setState({ cases: toCaseData(data) }));
   }
 
+  lastData() {
+    if (!this.state.cases) return {};
+
+    const length = this.state.cases.length;
+    return this.state.cases[length - 1];
+  }
+
   render() {
-    const date = new Date();
+    const date = new Date(this.lastData().name);
     date.setDate(date.getDate() - 3);
+
     return (
       <div className='pa4 bg-light-gray'>
         <div className='center'>
@@ -121,7 +139,8 @@ export default class App extends React.Component {
             x={date.toLocaleDateString()}
             stroke='red'
             strokeDasharray='3 3'
-            label='Partial Data' />
+            label='Partial Data'
+          />
           <Line type='monotone' name='Total' dataKey='rollingAverage' stroke={defaultColor} />
         </Chart>
 
