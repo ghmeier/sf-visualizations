@@ -24,6 +24,7 @@ function toHospitaleData(list) {
     icuTotal: item.ICU.total,
     acuteTotal: item['Med/Surg'].total,
     total: item.ICU.total + item['Med/Surg'].total,
+    suspected: item.ICU.suspected + item['Med/Surg'].suspected,
   }));
 }
 
@@ -113,7 +114,14 @@ export default class App extends React.Component {
           data={this.state.hospitalizations}>
           <Line type='monotone' name='ICU' dataKey='icuTotal' stroke={icuColor} />
           <Line type='monotone' name='Acute Care' dataKey='acuteTotal' stroke={acuteColor} />
-          <Line type='monotone' name='Total' dataKey='total' stroke={defaultColor} />
+          <Line type='monotone' name='Total Confirmed' dataKey='total' stroke={defaultColor} />
+          <Line
+            type='monotone'
+            name='Unconfirmed'
+            dataKey='suspected'
+            strokeDasharray='3 3'
+            stroke={defaultColor}
+          />
         </Chart>
 
         <Chart

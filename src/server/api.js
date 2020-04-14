@@ -11,6 +11,8 @@ const RESOURCE_MAP = {
 
 const hospitalCategories = ['ICU', 'Med/Surg'];
 
+const COVID_POSITIVE = 'COVID+';
+
 function resourceUrl(resource) {
   return `${BASE_URL}${RESOURCE_MAP[resource]}`;
 }
@@ -24,12 +26,16 @@ const ROLLING_WINDOW = 3;
 router.get('/hospitalizations', async (req, res) => {
   const allHospitalizations = await got(resourceUrl('hospitalizations')).json();
   const byDate = {};
-  allHospitalizations.forEach(({ reportdate, patientcount, dphcategory }) => {
+  allHospitalizations.forEach(({ reportdate, patientcount, dphcategory, covidstatus }) => {
     const date = new Date(reportdate).toLocaleDateString();
     if (!byDate[date]) byDate[date] = {};
-    if (!byDate[date][dphcategory]) byDate[date][dphcategory] = { total: 0, percentChange: 0 };
-    byDate[date][dphcategory].total += parseInt(patientcount, 10);
+    if (!byDate[date][dphcategory]) {
+      byDate[date][dphcategory] = { total: 0, suspected: 0, percentChange: 0 };
+    }
+    const increase = parseInt(patientcount, 10);
+    if (covidstatus === COVID_POSITIVE) byDate[date][dphcategory].total += increase;
     byDate[date].reported = new Date(reportdate);
+    if (covidstatus !== COVID_POSITIVE) byDate[date][dphcategory].suspected += increase;
   });
 
   const results = _.sortBy(
