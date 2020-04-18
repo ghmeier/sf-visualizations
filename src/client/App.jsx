@@ -141,7 +141,7 @@ export default class App extends React.Component {
 
         <Chart
           yAxisLabel='New Cases'
-          title='3-day rolling average number of new cases'
+          title='7-day rolling average number of new cases'
           data={this.state.cases}>
           <ReferenceLine
             x={date.toLocaleDateString()}
