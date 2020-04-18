@@ -21,7 +21,8 @@ function percentChange(previous, current) {
   return previous === 0 ? 0 : Math.floor((current / previous) * 1000) / 10 - 100;
 }
 
-const ROLLING_WINDOW = 3;
+// Days for the rolling average.
+const ROLLING_WINDOW = 7;
 
 router.get('/hospitalizations', async (req, res) => {
   const allHospitalizations = await got(resourceUrl('hospitalizations')).json();
