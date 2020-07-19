@@ -61,18 +61,21 @@ const caseCategories = [...transmissionCategories, 'Death'];
 router.get('/cases', async (req, res) => {
   const allCases = await got(resourceUrl('cases')).json();
   const byDate = {};
-  allCases.forEach(({ date, case_count, transmission_category, case_disposition }) => {
-    date = new Date(date).toLocaleDateString();
-    const key = case_disposition === 'Death' ? case_disposition : transmission_category;
-    if (!byDate[date]) {
-      byDate[date] = {};
-      caseCategories.forEach((category) => {
-        byDate[date][category] = { increase: 0, cumulative: 0 };
-      });
+
+  allCases.forEach(
+    ({ specimen_collection_date, case_count, transmission_category, case_disposition }) => {
+      const date = new Date(specimen_collection_date).toLocaleDateString();
+      const key = case_disposition === 'Death' ? case_disposition : transmission_category;
+      if (!byDate[date]) {
+        byDate[date] = {};
+        caseCategories.forEach((category) => {
+          byDate[date][category] = { increase: 0, cumulative: 0 };
+        });
+      }
+      byDate[date][key].increase += parseInt(case_count, 10);
+      byDate[date].reported = new Date(date);
     }
-    byDate[date][key].increase += parseInt(case_count, 10);
-    byDate[date].reported = new Date(date);
-  });
+  );
 
   const results = _.sortBy(Object.values(byDate), ({ reported }) => new Date(reported));
   let rollingSum = 0;

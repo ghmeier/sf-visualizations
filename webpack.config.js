@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: 'development',
@@ -34,6 +35,9 @@ module.exports = {
       headHtmlSnippet: '<style type="text/css">body { font-family: \'Roboto\' }</style>',
       appMountId: 'root',
       title: 'SF COVID Visalizations',
+    }),
+    new CopyWebpackPlugin({
+      patterns: [{ from: 'src/server/views/layout.html', to: 'dist/index.html' }],
     }),
   ],
   output: {

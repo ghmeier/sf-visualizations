@@ -10,6 +10,7 @@ import {
   Legend,
   Line,
   Text,
+  ResponsiveContainer,
 } from 'recharts';
 
 const icuColor = '#0000cc';
@@ -51,20 +52,18 @@ VerticalLabel.propTypes = { text: PropTypes.string.isRequired };
 
 function Chart({ title, data, yAxisLabel, children }) {
   return (
-    <div className='mw5 mw7-ns center pa2'>
+    <div className='center pa2' style={{ height: '300px' }}>
       <h2 className='f5 f4-ns fw6 black-70'>{title}</h2>
-      <LineChart
-        width={730}
-        height={300}
-        data={data}
-        margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
-        <CartesianGrid strokeDasharray='3 3' />
-        <XAxis dataKey='name' />
-        <YAxis label={<VerticalLabel text={yAxisLabel} />} />
-        <Tooltip />
-        <Legend />
-        {children}
-      </LineChart>
+      <ResponsiveContainer width='100%' height='100%'>
+        <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
+          <CartesianGrid strokeDasharray='2 2' />
+          <XAxis dataKey='name' />
+          <YAxis label={<VerticalLabel text={yAxisLabel} />} />
+          <Tooltip />
+          <Legend />
+          {children}
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
