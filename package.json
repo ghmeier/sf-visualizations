@@ -28,7 +28,7 @@
     "express": "^4.17.1",
     "got": "^10.7.0",
     "html-webpack-plugin": "^4.0.4",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "recharts": "^1.8.5"
   },
   "devDependencies": {
