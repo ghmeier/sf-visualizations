@@ -7,6 +7,7 @@ const BASE_URL = 'https://data.sfgov.org/resource/';
 const RESOURCE_MAP = {
   hospitalizations: 'nxjg-bhem.json',
   cases: 'tvq9-ec9w.json',
+  tests: 'nfpa-mg4g.json',
 };
 
 const hospitalCategories = ['ICU', 'Med/Surg'];
@@ -15,10 +16,6 @@ const COVID_POSITIVE = 'COVID+';
 
 function resourceUrl(resource) {
   return `${BASE_URL}${RESOURCE_MAP[resource]}`;
-}
-
-function percentChange(previous, current) {
-  return previous === 0 ? 0 : Math.floor((current / previous) * 1000) / 10 - 100;
 }
 
 // Days for the rolling average.
@@ -31,7 +28,7 @@ router.get('/hospitalizations', async (req, res) => {
     const date = new Date(reportdate).toLocaleDateString();
     if (!byDate[date]) byDate[date] = {};
     if (!byDate[date][dphcategory]) {
-      byDate[date][dphcategory] = { total: 0, suspected: 0, percentChange: 0 };
+      byDate[date][dphcategory] = { total: 0, suspected: 0 };
     }
     const increase = parseInt(patientcount, 10);
     if (covidstatus === COVID_POSITIVE) byDate[date][dphcategory].total += increase;
@@ -47,7 +44,6 @@ router.get('/hospitalizations', async (req, res) => {
   const previous = { ICU: 0, 'Med/Surg': 0 };
   results.forEach((value) => {
     hospitalCategories.map((key) => {
-      value[key].percentChange = percentChange(previous[key], value[key].total);
       previous[key] = value[key].total;
     });
   });
@@ -86,16 +82,13 @@ router.get('/cases', async (req, res) => {
       const { increase } = value[key];
       if (!previous) {
         value[key].cumulative = increase;
-        value[key].percentChange = 0;
         return;
       }
 
       value[key].cumulative = previous[key].cumulative + increase;
-      value[key].percentChange = percentChange(previous[key].cumulative, value[key].cumulative);
     });
 
     value.total = _.sumBy(transmissionCategories, (category) => value[category].cumulative);
-    if (previous) value.percentChange = percentChange(previous.total, value.total);
 
     rollingSum += _.sumBy(transmissionCategories, (category) => value[category].increase);
     if (ix >= ROLLING_WINDOW) {
@@ -104,7 +97,24 @@ router.get('/cases', async (req, res) => {
         (category) => results[ix - ROLLING_WINDOW][category].increase
       );
     }
-    value.rollingAverage = Math.floor((rollingSum / ROLLING_WINDOW) * 100) / 100;
+    value.rollingAverage = rollingSum / ROLLING_WINDOW;
+  });
+
+  res.json(results);
+});
+
+router.get('/tests', async (req, res) => {
+  const allTests = await got(resourceUrl('tests')).json();
+  let rollingSum = 0;
+  const results = allTests.map(({ tests, pct, specimen_collection_date }, ix) => {
+    rollingSum += parseInt(tests, 10);
+    if (ix >= ROLLING_WINDOW) rollingSum -= parseInt(allTests[ix - ROLLING_WINDOW].tests, 10);
+    return {
+      total: parseInt(tests, 10),
+      positiveRate: parseFloat(pct, 10) * 100,
+      reported: new Date(specimen_collection_date),
+      rollingAverage: rollingSum / ROLLING_WINDOW,
+    };
   });
 
   res.json(results);

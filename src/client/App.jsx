@@ -17,11 +17,16 @@ const icuColor = '#0000cc';
 const acuteColor = '#00cc66';
 const defaultColor = '#003366';
 
+function format(num) {
+  return num.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
+
 function toHospitaleData(list) {
   return list.map((item) => ({
     name: new Date(item.reported).toLocaleDateString(),
-    icuChange: item.ICU.percentChange,
-    acuteChange: item['Med/Surg'].percentChange,
     icuTotal: item.ICU.total,
     acuteTotal: item['Med/Surg'].total,
     total: item.ICU.total + item['Med/Surg'].total,
@@ -32,10 +37,17 @@ function toHospitaleData(list) {
 function toCaseData(list) {
   return list.map((item) => ({
     name: new Date(item.reported).toLocaleDateString(),
-    deathsPercentChange: item.Death.percentChange,
     deaths: item.Death.cumulative,
     total: item.total,
-    percentChange: item.percentChange,
+    rollingAverage: item.rollingAverage,
+  }));
+}
+
+function toTestData(list) {
+  return list.map((item) => ({
+    name: new Date(item.reported).toLocaleDateString(),
+    total: item.total,
+    positiveRate: item.positiveRate,
     rollingAverage: item.rollingAverage,
   }));
 }
@@ -58,8 +70,8 @@ function Chart({ title, data, yAxisLabel, children }) {
         <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 50 }}>
           <CartesianGrid strokeDasharray='2 2' />
           <XAxis dataKey='name' />
-          <YAxis label={<VerticalLabel text={yAxisLabel} />} />
-          <Tooltip />
+          <YAxis label={<VerticalLabel text={yAxisLabel} />} tickFormatter={format} />
+          <Tooltip formatter={format} />
           <Legend />
           {children}
         </LineChart>
@@ -89,6 +101,10 @@ export default class App extends React.Component {
     fetch('/api/cases')
       .then((response) => response.json())
       .then((data) => this.setState({ cases: toCaseData(data) }));
+
+    fetch('/api/tests')
+      .then((response) => response.json())
+      .then((data) => this.setState({ tests: toTestData(data) }));
   }
 
   lastData() {
@@ -100,7 +116,7 @@ export default class App extends React.Component {
 
   render() {
     const date = new Date(this.lastData().name);
-    date.setDate(date.getDate() - 3);
+    date.setDate(date.getDate() - 5);
 
     return (
       <div className='pa4 bg-light-gray'>
@@ -124,11 +140,27 @@ export default class App extends React.Component {
         </Chart>
 
         <Chart
-          yAxisLabel='% Change in Beds'
-          title='Change in San Francisco Hospital bed use over time'
-          data={this.state.hospitalizations}>
-          <Line type='monotone' name='ICU' dataKey='icuChange' stroke={icuColor} />
-          <Line type='monotone' name='Acute Care' dataKey='acuteChange' stroke={acuteColor} />
+          yAxisLabel='New Cases'
+          title='7-day rolling average number of new cases'
+          data={this.state.cases}>
+          <ReferenceLine x={date.toLocaleDateString()} stroke='red' strokeDasharray='3 3' />
+          <Line type='monotone' name='Total' dataKey='rollingAverage' stroke={defaultColor} />
+        </Chart>
+
+        <Chart yAxisLabel='Daily Tests' title='Daily Test Numbers' data={this.state.tests}>
+          <ReferenceLine x={date.toLocaleDateString()} stroke='red' strokeDasharray='3 3' />
+          <Line type='monotone' name='Total' dataKey='total' stroke={acuteColor} />
+          <Line
+            type='monotone'
+            name='7-day Average'
+            dataKey='rollingAverage'
+            stroke={defaultColor}
+          />
+        </Chart>
+
+        <Chart yAxisLabel='Test Positivity' title='Daily Test Positivity' data={this.state.tests}>
+          <ReferenceLine x={date.toLocaleDateString()} stroke='red' strokeDasharray='3 3' />
+          <Line type='monotone' name='% Positive' dataKey='positiveRate' stroke={defaultColor} />
         </Chart>
 
         <Chart
@@ -139,37 +171,10 @@ export default class App extends React.Component {
         </Chart>
 
         <Chart
-          yAxisLabel='New Cases'
-          title='7-day rolling average number of new cases'
-          data={this.state.cases}>
-          <ReferenceLine
-            x={date.toLocaleDateString()}
-            stroke='red'
-            strokeDasharray='3 3'
-            label='Partial Data'
-          />
-          <Line type='monotone' name='Total' dataKey='rollingAverage' stroke={defaultColor} />
-        </Chart>
-
-        <Chart
-          yAxisLabel='% change'
-          title='Change in San Francisco Cases Over Time'
-          data={this.state.cases}>
-          <Line type='monotone' name='Total' dataKey='percentChange' stroke={defaultColor} />
-        </Chart>
-
-        <Chart
           yAxisLabel='Number of Deaths'
           title='Total San Francisco Deaths Over Time'
           data={this.state.cases}>
           <Line type='monotone' name='Total' dataKey='deaths' stroke={defaultColor} />
-        </Chart>
-
-        <Chart
-          yAxisLabel='% change'
-          title='Change in San Francisco Deaths Over Time'
-          data={this.state.cases}>
-          <Line type='monotone' name='Total' dataKey='deathsPercentChange' stroke={defaultColor} />
         </Chart>
       </div>
     );
