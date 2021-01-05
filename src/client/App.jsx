@@ -39,6 +39,7 @@ function toCaseData(list) {
     name: new Date(item.reported).toLocaleDateString(),
     deaths: item.Death.cumulative,
     total: item.total,
+    increase: item.increase,
     rollingAverage: item.rollingAverage,
   }));
 }
@@ -48,7 +49,8 @@ function toTestData(list) {
     name: new Date(item.reported).toLocaleDateString(),
     total: item.total,
     positiveRate: item.positiveRate,
-    rollingAverage: item.rollingAverage,
+    rollingAverageTotal: item.rollingAverageTotal,
+    rollingAveragePositiveRate: item.rollingAveragePositiveRate,
   }));
 }
 
@@ -144,12 +146,7 @@ export default class App extends React.Component {
           title='7-day rolling average number of new cases'
           data={this.state.cases}>
           <ReferenceLine x={date.toLocaleDateString()} stroke='red' strokeDasharray='3 3' />
-          <Line type='monotone' name='Total' dataKey='rollingAverage' stroke={defaultColor} />
-        </Chart>
-
-        <Chart yAxisLabel='Daily Tests' title='Daily Test Numbers' data={this.state.tests}>
-          <ReferenceLine x={date.toLocaleDateString()} stroke='red' strokeDasharray='3 3' />
-          <Line type='monotone' name='Total' dataKey='total' stroke={acuteColor} />
+          <Line type='monotone' name='Tota' dataKey='increase' stroke={acuteColor} />
           <Line
             type='monotone'
             name='7-day Average'
@@ -158,9 +155,26 @@ export default class App extends React.Component {
           />
         </Chart>
 
+        <Chart yAxisLabel='Daily Tests' title='Daily Test Numbers' data={this.state.tests}>
+          <ReferenceLine x={date.toLocaleDateString()} stroke='red' strokeDasharray='3 3' />
+          <Line type='monotone' name='Total' dataKey='total' stroke={acuteColor} />
+          <Line
+            type='monotone'
+            name='7-day Average'
+            dataKey='rollingAverageTotal'
+            stroke={defaultColor}
+          />
+        </Chart>
+
         <Chart yAxisLabel='Test Positivity' title='Daily Test Positivity' data={this.state.tests}>
           <ReferenceLine x={date.toLocaleDateString()} stroke='red' strokeDasharray='3 3' />
-          <Line type='monotone' name='% Positive' dataKey='positiveRate' stroke={defaultColor} />
+          <Line type='monotone' name='Total' dataKey='positiveRate' stroke={acuteColor} />
+          <Line
+            type='monotone'
+            name='7-day Average'
+            dataKey='rollingAveragePositiveRate'
+            stroke={defaultColor}
+          />
         </Chart>
 
         <Chart

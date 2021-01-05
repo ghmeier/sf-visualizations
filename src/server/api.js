@@ -89,8 +89,9 @@ router.get('/cases', async (req, res) => {
     });
 
     value.total = _.sumBy(transmissionCategories, (category) => value[category].cumulative);
+    value.increase = _.sumBy(transmissionCategories, (category) => value[category].increase);
 
-    rollingSum += _.sumBy(transmissionCategories, (category) => value[category].increase);
+    rollingSum += value.increase;
     if (ix >= ROLLING_WINDOW) {
       rollingSum -= _.sumBy(
         transmissionCategories,
@@ -105,15 +106,21 @@ router.get('/cases', async (req, res) => {
 
 router.get('/tests', async (req, res) => {
   const allTests = await got(resourceUrl('tests')).json();
-  let rollingSum = 0;
+  const rollingSum = { total: 0, positiveRate: 0 };
   const results = allTests.map(({ tests, pct, specimen_collection_date }, ix) => {
-    rollingSum += parseInt(tests, 10);
-    if (ix >= ROLLING_WINDOW) rollingSum -= parseInt(allTests[ix - ROLLING_WINDOW].tests, 10);
+    rollingSum.total += parseInt(tests, 10);
+    const positiveRate = parseFloat(pct, 10) * 100;
+    rollingSum.positiveRate += positiveRate;
+    if (ix >= ROLLING_WINDOW) {
+      rollingSum.total -= parseInt(allTests[ix - ROLLING_WINDOW].tests, 10);
+      rollingSum.positiveRate -= parseFloat(allTests[ix - ROLLING_WINDOW].pct, 10) * 100;
+    }
     return {
       total: parseInt(tests, 10),
-      positiveRate: parseFloat(pct, 10) * 100,
+      positiveRate,
       reported: new Date(specimen_collection_date),
-      rollingAverage: rollingSum / ROLLING_WINDOW,
+      rollingAverageTotal: rollingSum.total / ROLLING_WINDOW,
+      rollingAveragePositiveRate: rollingSum.positiveRate / ROLLING_WINDOW,
     };
   });
 
