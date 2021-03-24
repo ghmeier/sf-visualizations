@@ -17,10 +17,10 @@ module.exports = {
       template: require('html-webpack-template'),
 
       scripts: [
-        'https://unpkg.com/react@16/umd/react.development.js',
-        'https://unpkg.com/react-dom@16/umd/react-dom.development.js',
+        'https://unpkg.com/react@16.14.0/umd/react.production.min.js',
+        'https://unpkg.com/react-dom@16.14.0/umd/react-dom.production.min.js',
         'https://unpkg.com/prop-types/prop-types.min.js',
-        'https://unpkg.com/recharts/umd/Recharts.min.js',
+        'https://unpkg.com/recharts@2.0.8/umd/Recharts.min.js',
         'build-main.js',
       ],
       links: [

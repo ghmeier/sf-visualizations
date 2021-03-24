@@ -9,8 +9,8 @@
     "start": "nodemon --watch ./src/server",
     "watch": "webpack --watch",
     "docker:build": "npm run lint && webpack && docker build -t sf-visualizations:latest .",
-    "docker:run": "docker run -d --name sf-visualizations -p 8081:8080 sf-visualizations:latest",
-    "docker:kill": "docker kill sf-visualizations",
+    "docker:run": "docker run -d --name sf-visualizations -p 9081:8080 sf-visualizations:latest",
+    "docker:kill": "docker kill sf-visualizations; docker rm sf-visualizations",
     "docker:push": "docker tag sf-visualizations:latest ghmeier/sf-visualizations:latest && docker push ghmeier/sf-visualizations:latest"
   },
   "repository": {
