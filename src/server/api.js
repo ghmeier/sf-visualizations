@@ -20,12 +20,16 @@ function resourceUrl(resource) {
 
 // Days for the rolling average.
 const ROLLING_WINDOW = 7;
+const EARLY_DATE = new Date('2020-06-10');
 
 router.get('/hospitalizations', async (req, res) => {
   const allHospitalizations = await got(resourceUrl('hospitalizations')).json();
   const byDate = {};
   allHospitalizations.forEach(({ reportdate, patientcount, dphcategory, covidstatus }) => {
-    const date = new Date(reportdate).toLocaleDateString();
+    let date = new Date(reportdate);
+    if (date < EARLY_DATE) return;
+
+    date = date.toLocaleDateString();
     if (!byDate[date]) byDate[date] = {};
     if (!byDate[date][dphcategory]) {
       byDate[date][dphcategory] = { total: 0, suspected: 0 };
@@ -60,7 +64,10 @@ router.get('/cases', async (req, res) => {
 
   allCases.forEach(
     ({ specimen_collection_date, case_count, transmission_category, case_disposition }) => {
-      const date = new Date(specimen_collection_date).toLocaleDateString();
+      let date = new Date(specimen_collection_date);
+      if (date < EARLY_DATE) return;
+      date = date.toLocaleDateString();
+
       const key = case_disposition === 'Death' ? case_disposition : transmission_category;
       if (!byDate[date]) {
         byDate[date] = {};
@@ -105,7 +112,11 @@ router.get('/cases', async (req, res) => {
 });
 
 router.get('/tests', async (req, res) => {
-  const allTests = await got(resourceUrl('tests')).json();
+  let allTests = await got(resourceUrl('tests')).json();
+  allTests = allTests.filter(
+    ({ specimen_collection_date }) => EARLY_DATE < new Date(specimen_collection_date)
+  );
+
   const rollingSum = { total: 0, positiveRate: 0 };
   const results = allTests.map(({ tests, pct, specimen_collection_date }, ix) => {
     rollingSum.total += parseInt(tests, 10);
@@ -115,6 +126,7 @@ router.get('/tests', async (req, res) => {
       rollingSum.total -= parseInt(allTests[ix - ROLLING_WINDOW].tests, 10);
       rollingSum.positiveRate -= parseFloat(allTests[ix - ROLLING_WINDOW].pct, 10) * 100;
     }
+
     return {
       total: parseInt(tests, 10),
       positiveRate,
